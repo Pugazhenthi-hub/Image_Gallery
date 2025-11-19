@@ -1,0 +1,80 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Gallery</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+</head>
+<body>
+  <h1 class="title"><center>Intractive Image Gallery</center></h1>
+
+    <div class="gallery-container">
+        {% for image in images %}
+            <img src="{% static 'images/' %}{{ image }}" alt="Gallery image {{ forloop.counter }}" class="thumb" data-filename="{{ image }}">
+        {% endfor %}
+    </div>
+
+    <div id="popup" class="popup" aria-hidden="true">
+        <div class="popup-inner">
+            <button id="close" class="close">&times;</button>
+            <button id="prev" class="nav">&#10094;</button>
+            <div class="popup-content">
+                <img id="popup-img" class="popup-img" alt="Expanded image">
+            </div>
+            <button id="next" class="nav">&#10095;</button>
+        </div>
+    </div>
+
+    <script>
+        const popup = document.getElementById("popup");
+        const popupImg = document.getElementById("popup-img");
+        const closeBtn = document.getElementById("close");
+        const prevBtn = document.getElementById("prev");
+        const nextBtn = document.getElementById("next");
+
+        // base static path (ends with /)
+        const staticBase = "{% static '' %}";
+
+        const thumbs = Array.from(document.querySelectorAll(".thumb"));
+        const images = thumbs.map(t => t.dataset.filename);
+        let currentIndex = 0;
+
+        function showPopup(index) {
+            currentIndex = (index + images.length) % images.length;
+            popupImg.classList.remove('natural');
+            popupImg.src = staticBase + 'images/' + images[currentIndex];
+            popup.style.display = 'flex';
+        }
+
+        thumbs.forEach((img, idx) => {
+            img.addEventListener('click', () => showPopup(idx));
+        });
+
+        closeBtn.onclick = () => popup.style.display = 'none';
+        popup.onclick = (e) => { if (e.target === popup) popup.style.display = 'none'; };
+
+        // Toggle between fit-to-screen and natural size on image click
+        popupImg.addEventListener('click', (e) => {
+            // prevent closing when clicking the image
+            e.stopPropagation();
+            popupImg.classList.toggle('natural');
+        });
+
+        // Navigation
+        prevBtn.addEventListener('click', (e) => { e.stopPropagation(); showPopup(currentIndex - 1); });
+        nextBtn.addEventListener('click', (e) => { e.stopPropagation(); showPopup(currentIndex + 1); });
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (popup.style.display !== 'flex') return;
+            if (e.key === 'ArrowLeft') showPopup(currentIndex - 1);
+            if (e.key === 'ArrowRight') showPopup(currentIndex + 1);
+            if (e.key === 'Escape') popup.style.display = 'none';
+        });
+    </script>
+
+</body>
+</html>
